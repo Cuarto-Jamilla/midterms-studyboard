@@ -1,34 +1,58 @@
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { getGroupById } from "@/lib/data";
+import { authOptions } from "@/lib/auth";
 import TaskItem from "@/components/TaskItem";
+import DeleteGroupButton from "@/components/DeleteGroupButton";
+import NewTaskForm from "@/components/NewTaskForm";
 
 export default async function GroupDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const group = await getGroupById(params.id);
+  const [group, session] = await Promise.all([
+    getGroupById(params.id),
+    getServerSession(authOptions),
+  ]);
 
-  // Next.js's built-in way to render the closest not-found.tsx (or a
-  // default 404) when a dynamic route doesn't match real data.
+  // Next.js's built-in way to render the closest not-found.tsx
+  // when a dynamic route doesn't match real data.
   if (!group) {
     notFound();
   }
 
+  const isOwner = session?.user.id === group.ownerId;
+
   return (
     <div>
       <h1 className="text-3xl font-bold">{group.name}</h1>
+
       <p className="text-gray-500">
         {group.subject} · {group.memberCount} members · Created by{" "}
         {group.owner.name}
       </p>
 
+      {isOwner && (
+        <DeleteGroupButton groupId={group.id} />
+      )}
+
       <h2 className="mt-8 text-lg font-semibold">Tasks</h2>
+
       <ul className="mt-3 flex flex-col gap-2">
         {group.tasks.map((task) => (
-          <TaskItem key={task.id} task={task} />
+          <TaskItem
+            key={task.id}
+            task={task}
+            isOwner={isOwner}
+            groupId={group.id}
+          />
         ))}
       </ul>
+
+      {isOwner && (
+        <NewTaskForm groupId={group.id} />
+      )}
     </div>
   );
 }
