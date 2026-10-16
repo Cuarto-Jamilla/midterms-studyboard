@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getGroups, createGroup } from "@/lib/data";
-import { createGroupSchema } from "@/lib/validations";
+import { createGroupSchema } from "@/lib/validation";
 
 // GET /api/groups — list every group. Stays PUBLIC — no changes needed.
 export async function GET() {
